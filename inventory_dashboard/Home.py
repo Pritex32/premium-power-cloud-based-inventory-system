@@ -43,7 +43,7 @@ supabase = get_supabase_client() # use this to call the supabase database
 
 
 # Load the image
-image_path = r"C:\Users\USER\Documents\vscode\inventory_dashboard\pages\Daily_Requisitions and 8 more pages - Profile 1 - Microsoft​ Edge 3_23_2025 1_29_17 PM (2).png"
+image_path = "inventory_dashboard/pages/Daily_Requisitions and 8 more pages - Profile 1 - Microsoft​ Edge 3_23_2025 1_29_17 PM (2).png"
 image = Image.open(image_path)
 
 # Resize the image (set new width & height)
