@@ -323,47 +323,55 @@ if selected == 'Home':
 # Fetch all inventory master logs
 all_logs = supabase.table("inventory_master_log").select("*").execute().data
 df_logs = pd.DataFrame(all_logs)
+
 if selected == 'Filter':
     st.subheader('Filter inventory')
+
     if not df_logs.empty:
         with st.expander("🔍 Filter Inventory Log", expanded=True):
-            df_logs["log_date"] = pd.to_datetime(df_logs["log_date"])
+            df_logs["log_date"] = pd.to_datetime(df_logs["log_date"], errors="coerce")  # convert with error handling
 
-        # Get unique values for filters
-            item_options = df_logs["item_name"].unique()
-            min_date = df_logs["log_date"].min().date()
-            max_date = df_logs["log_date"].max().date()
-            min_supply = int(df_logs["supply"].min())
-            max_supply = int(df_logs["supply"].max())
+            # Drop rows with invalid dates
+            df_logs = df_logs.dropna(subset=["log_date"])
 
-        # Sidebar filters
-            selected_item = st.selectbox("Select an Item", options=item_options)
-            date_range = st.date_input("Select Date Range", [min_date, max_date])
+            # Get unique values for filters
+            item_options = df_logs["item_name"].dropna().unique()
 
-        # Handle slider safely
-        if min_supply == max_supply:
-            st.warning("⚠️ All supply values are the same, slider is disabled.")
-            supply_range = (min_supply, max_supply)
-        else:
-            supply_range = st.slider(
-            "Supply Range",
-            min_value=min_supply,
-            max_value=max_supply,
-            value=(min_supply, max_supply)
-            )
+            if not df_logs.empty:
+                min_date = df_logs["log_date"].min().date()
+                max_date = df_logs["log_date"].max().date()
+                min_supply = int(df_logs["supply"].min())
+                max_supply = int(df_logs["supply"].max())
 
-        # Apply filters
-        filtered_df = df_logs[
-            (df_logs["item_name"] == selected_item) &
-            (df_logs["log_date"] >= pd.to_datetime(date_range[0])) &
-            (df_logs["log_date"] <= pd.to_datetime(date_range[1])) &
-            (df_logs["supply"] >= supply_range[0]) &
-            (df_logs["supply"] <= supply_range[1])
-        ]
+                # Sidebar filters
+                selected_item = st.selectbox("Select an Item", options=item_options)
+                date_range = st.date_input("Select Date Range", [min_date, max_date])
 
-        # Show filtered table
-        st.dataframe(filtered_df)
+                # Handle slider safely
+                if min_supply == max_supply:
+                    st.warning("⚠️ All supply values are the same, slider is disabled.")
+                    supply_range = (min_supply, max_supply)
+                else:
+                    supply_range = st.slider(
+                        "Supply Range",
+                        min_value=min_supply,
+                        max_value=max_supply,
+                        value=(min_supply, max_supply)
+                    )
 
+                # Apply filters
+                filtered_df = df_logs[
+                    (df_logs["item_name"] == selected_item) &
+                    (df_logs["log_date"] >= pd.to_datetime(date_range[0])) &
+                    (df_logs["log_date"] <= pd.to_datetime(date_range[1])) &
+                    (df_logs["supply"] >= supply_range[0]) &
+                    (df_logs["supply"] <= supply_range[1])
+                ]
+
+                # Show filtered table
+                st.dataframe(filtered_df)
+            else:
+                st.warning("⚠️ No valid log dates available.")
     else:
         st.warning("⚠️ Inventory log table is empty.")
 
