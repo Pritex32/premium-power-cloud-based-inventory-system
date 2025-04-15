@@ -194,9 +194,8 @@ elif menu == "Login":
             st.sidebar.success(f"✅ Welcome {user['name']}! 🎉")
             st.rerun()  # Refresh UI after login
 
-    else:
-        st.error("⚠️ Invalid email or password!")
-
+        else:
+            st.error("⚠️ Invalid email or password!")
 
 
 elif menu == "Delete Account":
