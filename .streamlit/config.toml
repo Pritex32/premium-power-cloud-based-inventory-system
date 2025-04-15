@@ -1,1 +1,8 @@
 
+[theme]
+primaryColor = "#F39C12"
+backgroundColor = "#D4EDDA"  # Light Green
+secondaryBackgroundColor = "#A9DFBF"  # A slightly darker green
+textColor = "#1C2833"  # Darker text for better visibility
+font = "sans serif"
+
