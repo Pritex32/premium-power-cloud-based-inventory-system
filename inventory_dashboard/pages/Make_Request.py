@@ -61,6 +61,7 @@ if "user" not in st.session_state:
 
 # 🔹 **Check Access for Inventory Role**
 check_access(required_role="Employee")
+check_access(required_role="Inventory")
 
 
 # Add your inventory-related features here
