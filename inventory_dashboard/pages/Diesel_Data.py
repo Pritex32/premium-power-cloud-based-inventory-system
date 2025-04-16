@@ -103,6 +103,7 @@ def fetch_data_from_supabase():
 
 st.subheader("📦 REAL TIME INVENTORY MANAGEMENT SYSTEM")
 
+
 with st.sidebar:
     selected = option_menu(
         menu_title=('Options'),
@@ -110,6 +111,10 @@ with st.sidebar:
         icons=["house", "plus-circle", "trash", "calculator","bar-chart-line"],
         default_index=0
     )
+
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()  # ✅ Clear cached data
+    st.rerun() # ✅ Force rerun of the app
 
 
 if selected == "Home page":
