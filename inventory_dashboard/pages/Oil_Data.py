@@ -228,7 +228,7 @@ def delete_requisition(req_id):
 
 # Streamlit UI for deletion
 if selected == "Delete":
-    st.sidebar.subheader("🗑️ Delete usage")
+    st.subheader("🗑️ Delete usage")
 
     req_id = st.number_input("Enter the serial number", format="%d", step=1)
 
