@@ -210,7 +210,7 @@ def delete_requisition(req_id):
         supabase = get_supabase_client()  # Get Supabase connection
         
         # Check if the record exists
-        check_response = supabase.table("oil_table").select("oil_id").eq("diesel_id", req_id).execute()
+        check_response = supabase.table("oil_table").select("oil_id").eq("oil_id", req_id).execute()
         if not check_response.data:
             st.sidebar.warning(f"⚠️ No requisition found with ID {req_id}. Deletion aborted.")
             return
