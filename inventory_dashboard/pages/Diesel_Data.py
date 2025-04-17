@@ -145,12 +145,13 @@ def get_last_closing_stock():
 def insert_inventory_log(date, details, open_stock, return_item, supply, stock_out):
     try:
         supabase = get_supabase_client()
-           # ✅ Always fetch latest closing stock here
-      
 
-        date_str = date.strftime("%Y-%m-%d")  # ✅ Convert date to string
-        
-        # 🚀 Insert without specifying diesel_id
+        # Always get the latest closing stock before insert
+        open_stock = get_last_closing_stock()
+        closing_stock = open_stock + return_item + supply - stock_out  # ✅ Compute closing stock
+
+        date_str = date.strftime("%Y-%m-%d")
+
         response = (
             supabase.table("diesel")
             .insert({
@@ -159,7 +160,8 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
                 "open_stock": open_stock,
                 "return_item": return_item,
                 "supply": supply,
-                "stock_out": stock_out
+                "stock_out": stock_out,
+                "closing_stock": closing_stock  # ✅ Store it!
             })
             .execute()
         )
@@ -167,12 +169,14 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
         if response.data:
             diesel_id = response.data[0]["diesel_id"]
             st.success(f"✅ Diesel log added successfully! ID: {diesel_id} 🎉")
-            st.rerun()
+            st.experimental_rerun()
+
         else:
             st.error("❌ Failed to insert diesel log.")
 
     except Exception as e:
         st.error(f"❌ Error inserting record: {e}")
+
 
 
 
