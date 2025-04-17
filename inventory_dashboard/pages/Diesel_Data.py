@@ -154,7 +154,7 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
             .insert({
                 "date": date_str,
                 "details": details,
-                "open_stock": open_stock,
+                "open_stock": get_last_closing_stock(),
                 "return_item": return_item,
                 "supply": supply,
                 "stock_out": stock_out
