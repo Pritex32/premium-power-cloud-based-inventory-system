@@ -161,7 +161,7 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
                 "return_item": return_item,
                 "supply": supply,
                 "stock_out": stock_out,
-                "closing_stock": closing_stock  # ✅ Store it!
+               # ✅ Store it!
             })
             .execute()
         )
