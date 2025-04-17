@@ -131,27 +131,28 @@ if selected == "Home page":
 # Function to Get the Last Closing Stock
 def get_last_closing_stock():
     try:
+        # Fetch the last record with the highest diesel_id
         response = supabase.table("diesel").select("closing_stock").order("diesel_id", desc=True).limit(1).execute()
         
-        # Check if data exists
+        # If response has data, return the last closing_stock; otherwise, return 0
         data = response.data if hasattr(response, "data") and response.data else []
         return data[0]["closing_stock"] if data else 0
-
     except Exception as e:
         st.error(f"❌ Error fetching last closing stock: {e}")
-        return 0 # Return last closing stock or 0 if no record exists
+        return 0  # If no previous record exists, return 0
+
+
 
 # Function to Insert Inventory Log
-def insert_inventory_log(date, details, open_stock, return_item, supply, stock_out):
+def insert_inventory_log(date, details, return_item, supply, stock_out):
     try:
-        supabase = get_supabase_client()
-
-        # Always get the latest closing stock before insert
+        # Fetch the last closing stock and use it as the opening stock for the new entry
         open_stock = get_last_closing_stock()
-        closing_stock = open_stock + return_item + supply - stock_out  # ✅ Compute closing stock
-
+        
+        # Get today's date as string
         date_str = date.strftime("%Y-%m-%d")
 
+        # Insert new inventory log (don't insert closing_stock because it's calculated)
         response = (
             supabase.table("diesel")
             .insert({
@@ -160,33 +161,33 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
                 "open_stock": open_stock,
                 "return_item": return_item,
                 "supply": supply,
-                "stock_out": stock_out,
-               # ✅ Store it!
+                "stock_out": stock_out
             })
             .execute()
         )
 
+        # Check for successful insert and show message
         if response.data:
             diesel_id = response.data[0]["diesel_id"]
             st.success(f"✅ Diesel log added successfully! ID: {diesel_id} 🎉")
-            st.rerun()
-
         else:
             st.error("❌ Failed to insert diesel log.")
-
     except Exception as e:
         st.error(f"❌ Error inserting record: {e}")
+
+          
 
 
 
 
 # ✅ Streamlit UI for Adding Diesel Usage
+# Streamlit UI for Adding Diesel Usage
 if selected == "Add Diesel":
     st.subheader("➕ Add New Diesel Usage")
 
     # Get last closing stock and use it as the new opening stock
     last_closing_stock = get_last_closing_stock()
-    
+
     # User Inputs
     date = st.date_input("Date", value=datetime.today().date()) 
     details = st.text_input("Input Details")
@@ -197,7 +198,8 @@ if selected == "Add Diesel":
 
     # Submit Button
     if st.button("➕ Add Diesel"):
-        insert_inventory_log(date, details, last_closing_stock, return_item, supply, stock_out)
+        insert_inventory_log(date, details, return_item, supply, stock_out)
+
 
 
 
