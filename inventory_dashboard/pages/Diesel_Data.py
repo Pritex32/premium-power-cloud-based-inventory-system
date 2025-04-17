@@ -167,7 +167,7 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
         if response.data:
             diesel_id = response.data[0]["diesel_id"]
             st.success(f"✅ Diesel log added successfully! ID: {diesel_id} 🎉")
-
+            st.rerun()
         else:
             st.error("❌ Failed to insert diesel log.")
 
