@@ -146,7 +146,7 @@ def insert_inventory_log(date, details, open_stock, return_item, supply, stock_o
     try:
         supabase = get_supabase_client()
            # ✅ Always fetch latest closing stock here
-        open_stock = get_last_closing_stock()
+      
 
         date_str = date.strftime("%Y-%m-%d")  # ✅ Convert date to string
         
