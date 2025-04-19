@@ -8,7 +8,7 @@ from streamlit_cookies_manager import EncryptedCookieManager
 import time
 import json
 
-cookies = EncryptedCookieManager(prefix="inventory_app_", password="your_secret_key_here")
+cookies = EncryptedCookieManager(prefix="inventory_app_", password="2019")
 
 
 def check_access(required_role=None):
