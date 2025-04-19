@@ -212,7 +212,8 @@ def move_restocks_to_history(selected_date):
 def update_inventory_balances(selected_date):
     # Fetch today's requisitions and restocks
     requisitions_today = supabase.table("requisition").select("*").eq("requisition_date", str(selected_date)).execute().data
-    restocks_today = supabase.table("restock_log").select("*").eq("restock_date", str(today)).execute().data
+    restocks_today = supabase.table("goods_bought").select("*").eq("purchase_date", str(selected_date)).execute().data
+
    
 
     # If both are empty, show a warning and stop
