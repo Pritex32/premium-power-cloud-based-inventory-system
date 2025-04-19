@@ -8,7 +8,7 @@ import json
 
 import time
 
-cookies = EncryptedCookieManager(prefix="inventory_app_", password="your_secret_key_here")
+cookies = EncryptedCookieManager(prefix="inventory_app_", password="2021")
 
 
 def check_access(required_role=None):
