@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-cookies = EncryptedCookieManager(prefix="inventory_app_", password="your_secret_key_here")
+cookies = EncryptedCookieManager(prefix="inventory_app_", password="2020")
 
 
 def check_access(required_role=None):
