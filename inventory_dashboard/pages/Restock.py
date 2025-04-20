@@ -252,7 +252,7 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
         return None
 
 
-import traceback
+
 
 def preview_restock_history_record(restock_id_to_delete, date_to_delete):
     """Preview the restock history record for the given restock_id and date."""
