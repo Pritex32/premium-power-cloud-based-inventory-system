@@ -616,7 +616,35 @@ if selected == "Filter":
                     st.warning(f"⚠️ No results found for '{item_name}' in the selected date range.")
 
 
-requisition_history_df = pd.DataFrame(requisition_history_data())
+
+
+# Function to get requisition history data
+def requisition_history_data():
+    supabase = get_supabase_client()  # Ensure your Supabase client is initialized here
+    response = supabase.table("requisition_history").select("*").execute()
+    return response.data
+
+# Call the function and store the result in a separate variable
+requisition_data = requisition_history_data()
+
+# Check if the data is valid before creating a DataFrame
+if requisition_data and isinstance(requisition_data, list):
+    requisition_history_df = pd.DataFrame(requisition_data)
+    st.write(requisition_history_df)
+else:
+    st.error("❌ Invalid or empty data returned from the database.")
+
+
+
+
+
+
+
+
+
+
+
+
 
 if selected == "Reports":
 
