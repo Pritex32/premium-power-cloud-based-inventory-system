@@ -233,11 +233,11 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
             .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute().data
-        
+
         if not restock_history_response:
             st.warning(f"No restock history record found for Restock ID {restock_id_to_delete} on {date_to_delete}.")
             return None
-        
+
         restock_history_record = restock_history_response[0]
         # Show the preview of the restock history record
         st.write(f"**Preview of the record to delete:**")
@@ -246,6 +246,7 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
         st.write(f"Restocked Quantity: {restock_history_record['supply']}")
         st.write(f"Restock Date: {restock_history_record['restock_date']}")
         return restock_history_record
+
     except Exception as e:
         st.error(f"❌ An error occurred while fetching the restock history record: {e}")
         return None
@@ -276,12 +277,40 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
             # Try getting item_id from restock_history if not in restock_log
             restock_history_entry = supabase.table("restock_history")\
                 .select("item_id")\
-                .eq("restock_id", restock_id)
-            
-            
-            
+                .eq("restock_id", restock_id_to_delete)\
+                .eq("restock_date", date_to_delete)\
+                .execute().data
+
+            if restock_history_entry:
+                item_id = restock_history_entry[0]['item_id']
+            else:
+                st.error("❌ No matching restock log or history found.")
+                return
+
+        # Delete from restock_history
+        supabase.table("restock_history")\
+            .delete()\
+            .eq("restock_id", restock_id_to_delete)\
+            .eq("restock_date", date_to_delete)\
+            .execute()
+
+        # Delete from inventory_master_log using item_id and log_date
+        if item_id:
+            supabase.table("inventory_master_log")\
+                .delete()\
+                .eq("item_id", item_id)\
+                .eq("log_date", date_to_delete)\
+                .execute()
+
+            st.success(f"✅ Successfully deleted all related records for Restock ID {restock_id_to_delete} on {date_to_delete}")
+        else:
+            st.warning("⚠️ Could not determine item_id to delete inventory log.")
+
+    except Exception as e:
+        st.error(f"❌ An error occurred while deleting records: {e}")
 if selected == 'Delete':
     display_delete_interface()
+
 
 
 
