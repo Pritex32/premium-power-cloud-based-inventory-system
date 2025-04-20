@@ -304,7 +304,7 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
             .execute().data
 
         if inventory_data:
-            current_quantity = inventory_data[0]['quantity']
+            current_quantity = inventory_data[0]['supply']
             updated_quantity = max(0, current_quantity - restocked_quantity)
 
             supabase.table("inventory_master-log")\
