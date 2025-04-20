@@ -251,69 +251,82 @@ def preview_restock_history_record(item_id_to_delete, date_to_delete):
         return None
 
 # Function to delete restock history and reflect changes in inventory
-def delete_restock_history_and_reflect_in_inventory(item_id_to_delete, date_to_delete):
-    """Delete the restock history and update inventory_master_log table."""
+def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete):
+    """Delete the related requisition history, restock log, restock history, and inventory record by restock_id."""
     try:
-        # Delete the restock history record for the given item_id and date
-        response_restock_history = supabase.table("restock_history")\
+        # First, delete the restock log record for the given restock_id and date
+        response_restock_log = supabase.table("restock_log")\
             .delete()\
-            .eq("item_id", item_id_to_delete)\
+            .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute()
 
-        if response_restock_history.data:
-            st.success(f"✅ Successfully deleted restock history record for Item ID: {item_id_to_delete} on {date_to_delete}")
-        else:
-            st.info(f"No restock history records found for Item ID: {item_id_to_delete} on {date_to_delete}.")
+        if response_restock_log.data is None:  # No record found in restock_log, proceed to restock_history
+            # If nothing is deleted in restock_log, delete the corresponding record from restock_history
+            response_restock_history = supabase.table("restock_history")\
+                .delete()\
+                .eq("restock_id", restock_id_to_delete)\
+                .eq("restock_date", date_to_delete)\
+                .execute()
 
-        # Now delete the corresponding record from the inventory_master_log table
+            if response_restock_history.data is None:  # Check if we couldn't delete anything from restock_history
+                st.error(f"❌ No record found for restock_id {restock_id_to_delete} on {date_to_delete}")
+                return
+
+        # After deleting from restock_log and/or restock_history, delete the corresponding record from inventory_master_log
         response_inventory = supabase.table("inventory_master_log")\
             .delete()\
-            .eq("item_id", item_id_to_delete)\
+            .eq("restock_id", restock_id_to_delete)\
             .eq("log_date", date_to_delete)\
             .execute()
 
         if response_inventory.data:
-            st.success(f"✅ Successfully deleted inventory log for Item ID: {item_id_to_delete} on {date_to_delete}")
+            st.success(f"✅ Successfully deleted restock log, restock history, and inventory log for Restock ID: {restock_id_to_delete} on {date_to_delete}")
         else:
-            st.error(f"❌ Failed to delete inventory log for Item ID: {item_id_to_delete} on {date_to_delete}")
+            st.error(f"❌ Failed to delete inventory log for Restock ID: {restock_id_to_delete} on {date_to_delete}")
 
     except Exception as e:
-        st.error(f"❌ An error occurred while deleting restock history and updating inventory log: {e}")
+        st.error(f"❌ An error occurred while deleting records: {e}")
 
-# Streamlit Interface for deleting restock history
-def display_delete_restock_history_interface():
-    st.title("Delete Restock History Log")
+# Streamlit Interface
+def display_delete_interface():
+    st.title("Delete Restock Log and Requisition History")
 
-    # Inputs for item_id and date
-    item_id_to_delete = st.number_input("Enter Item ID to Delete Restock History:", min_value=1, step=1)
-    date_to_delete = st.date_input("Select the Date to Delete Restock History Log:", value=pd.to_datetime("today"))
+    # Inputs for restock_id and date
+    restock_id_to_delete = st.number_input("Enter Restock ID to Delete:", min_value=1, step=1)
+    date_to_delete = st.date_input("Select the Date to Delete Restock Log:", value=pd.to_datetime("today"))
 
     # Preview the record before deletion
-    if st.button("Preview Restock Record"):
-        if item_id_to_delete and date_to_delete:
-            restock_history_record = preview_restock_history_record(item_id_to_delete, date_to_delete)
+    if st.button("Preview Record"):
+        if restock_id_to_delete and date_to_delete:
+            inventory_record = preview_inventory_record(restock_id_to_delete, date_to_delete)
         else:
-            st.warning("Please enter a valid Item ID and Date.")
+            st.warning("Please enter a valid Restock ID and Date.")
+
+    # Delete the record if the button is pressed
+    if st.button("Delete Record"):
+        if restock_id_to_delete and date_to_delete:
+            delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete)
+        else:
+            st.warning("Please enter a valid Restock ID and Date.")
 
     # Delete record after preview
     if st.button("Confirm Deletion"):
         if item_id_to_delete and date_to_delete:
-            restock_history_record = preview_restock_history_record(item_id_to_delete, date_to_delete)
-            if restock_history_record:
-                confirm = st.radio("Are you sure you want to delete this restock history record?", ("Yes", "No"))
+            inventory_record = preview_inventory_record(item_id_to_delete, date_to_delete)
+            if inventory_record:
+                confirm = st.radio("Are you sure you want to delete this record?", ("Yes", "No"))
                 if confirm == "Yes":
-                    delete_restock_history_and_reflect_in_inventory(item_id_to_delete, date_to_delete)
+                    delete_inventory_and_related_records(item_id_to_delete, date_to_delete)
         else:
             st.warning("Please enter a valid Item ID and Date.")
 
-# Sidebar for selection
-
-# Display interface based on selection
-if selected == "Delete":
-    display_delete_restock_history_interface()
 
 
+
+# Display the interface
+if selected == 'Delete':
+    display_delete_interface()
 
 def get_item_aggregation(item, start_date, end_date, aggregation, field):
     try:
