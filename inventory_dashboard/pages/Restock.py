@@ -563,7 +563,7 @@ if selected == "Filter":
 
 
 # Load data
-restock_history_df = pd.DataFrame(restock_history_data())
+restock_history_df = pd.DataFrame(restock_history_data)
 
 if selected == "Reports":
 
