@@ -276,8 +276,8 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
             # Try getting item_id from restock_history if not in restock_log
             restock_history_entry = supabase.table("restock_history")\
                 .select("item_id")\
-                .eq("restock_id", restock_id
-
+                .eq("restock_id", restock_id)
+            
 if selected == 'Delete':
     display_delete_interface()
 
