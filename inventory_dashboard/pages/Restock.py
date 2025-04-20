@@ -352,21 +352,158 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
 
 
 
-def display_delete_interface():
-    st.subheader("🗑️ Delete Restock Entry")
+import streamlit as st
+from supabase import create_client
 
-    restock_id_to_delete = st.text_input("Enter Restock ID:")
-    date_to_delete = st.date_input("Restock Date:")
+# Initialize the Supabase client
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    if st.button("Preview Record"):
-        preview_restock_history_record(restock_id_to_delete, date_to_delete)
+st.header("🗑️ Delete Restock Record by ID")
 
-    if st.button("Delete Record"):
-        delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete)
+# 1. Input the Restock ID and Date to delete
+restock_id_to_delete = st.text_input("Enter Restock ID to Delete", "")
+date_to_delete = st.date_input("Enter Restock Date to Delete")
 
+if restock_id_to_delete and date_to_delete:
+    # 2. Fetch restock records from restock_history and restock_log by restock_id and restock_date
+    restock_history_data = supabase.table("restock_history")\
+        .select("*")\
+        .eq("restock_id", restock_id_to_delete)\
+        .eq("restock_date", date_to_delete)\
+        .execute().data
 
-if selected == 'Delete':
-    display_delete_interface()
+    restock_log_data = supabase.table("restock_log")\
+        .select("*")\
+        .eq("restock_id", restock_id_to_delete)\
+        .eq("restock_date", date_to_delete)\
+        .execute().data
+    
+    # Combine restock data from both tables
+    if restock_history_data:
+        selected_restock = restock_history_data[0]
+    elif restock_log_data:
+        selected_restock = restock_log_data[0]
+    else:
+        selected_restock = None
+
+    if selected_restock:
+        # Display the restock details for confirmation
+        st.subheader("Restock Details to Delete")
+        st.write(f"**Restock ID:** {selected_restock['restock_id']}")
+        st.write(f"**Item ID:** {selected_restock['item_id']}")
+        st.write(f"**Supply Added:** {selected_restock['supply']}")
+        st.write(f"**Restock Date:** {selected_restock['restock_date']}")
+        
+        # 3. Confirm deletion
+        if selected == 'Delete':
+    st.header("🗑️ Delete Restock Record by ID")
+
+    # 1. Input the Restock ID and Date to delete
+    restock_id_to_delete = st.text_input("Enter Restock ID to Delete", "")
+    date_to_delete = st.date_input("Enter Restock Date to Delete")
+
+    # Check if the necessary inputs are provided
+    if restock_id_to_delete and date_to_delete:
+        # 2. Fetch restock records from both tables
+        restock_history_data = supabase.table("restock_history")\
+            .select("*")\
+            .eq("restock_id", restock_id_to_delete)\
+            .eq("restock_date", date_to_delete)\
+            .execute().data
+
+        restock_log_data = supabase.table("restock_log")\
+            .select("*")\
+            .eq("restock_id", restock_id_to_delete)\
+            .eq("restock_date", date_to_delete)\
+            .execute().data
+
+        # Combine data from both tables
+        if restock_history_data:
+            selected_restock = restock_history_data[0]
+        elif restock_log_data:
+            selected_restock = restock_log_data[0]
+        else:
+            selected_restock = None
+
+        # Check if a restock record is found
+        if selected_restock:
+            # Display the restock details for confirmation
+            st.subheader("Restock Details to Delete")
+            st.write(f"**Restock ID:** {selected_restock['restock_id']}")
+            st.write(f"**Item ID:** {selected_restock['item_id']}")
+            st.write(f"**Supply Added:** {selected_restock['supply']}")
+            st.write(f"**Restock Date:** {selected_restock['restock_date']}")
+
+            # 3. Confirm deletion
+            if st.button("🗑️ Delete This Restock"):
+                try:
+                    # 4. Delete from restock_history if the record exists
+                    if restock_history_data:
+                        supabase.table("restock_history").delete()\
+                            .eq("restock_id", selected_restock["restock_id"])\
+                            .eq("restock_date", selected_restock["restock_date"]).execute()
+
+                    # 5. Delete from restock_log if the record exists
+                    if restock_log_data:
+                        supabase.table("restock_log").delete()\
+                            .eq("restock_id", selected_restock["restock_id"])\
+                            .eq("restock_date", selected_restock["restock_date"]).execute()
+
+                    # 6. Optionally, update inventory if the record exists
+                    item_id = selected_restock.get("item_id")
+                    supply_added = selected_restock.get("supply")
+
+                    if item_id and supply_added:
+                        # Fetch current inventory data
+                        inventory_item = supabase.table("inventory_master_log")\
+                            .select("supply")\
+                            .eq("item_id", item_id)\
+                            .single().execute().data
+                        
+                        if inventory_item:
+                            # Deduct the added supply from inventory (since we are deleting the restock)
+                            new_supply = inventory_item["supply"] - supply_added
+                            supabase.table("inventory_master_log").update({"supply": new_supply})\
+                                .eq("item_id", item_id).execute()
+
+                    # Success message after deletion from both tables and inventory update
+                    st.success("✅ Restock record deleted and inventory updated successfully.")
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"❌ Failed to delete: {e}")
+        else:
+            st.error("❌ No restock record found with the given Restock ID and Date.")
+    else:
+        st.info("Please enter a Restock ID and Restock Date to delete.")
+                # 6. Optionally, update inventory if the record exists
+                item_id = selected_restock.get("item_id")
+                supply_added = selected_restock.get("supply")
+
+                if item_id and supply_added:
+                    # Fetch current inventory data
+                    inventory_item = supabase.table("inventory_master_log")\
+                        .select("supply")\
+                        .eq("item_id", item_id)\
+                        .single().execute().data
+                    
+                    if inventory_item:
+                        # Deduct the added supply from inventory (since we are deleting the restock)
+                        new_supply = inventory_item["supply"] - supply_added
+                        supabase.table("inventory_master_log").update({"supply": new_supply})\
+                            .eq("item_id", item_id).execute()
+
+                # Success message after deletion from both tables and inventory update
+                st.success("✅ Restock record deleted and inventory updated successfully.")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"❌ Failed to delete: {e}")
+    else:
+        st.error("❌ No restock record found with the given Restock ID and Date.")
+else:
+    st.info("Please enter a Restock ID and Restock Date to delete.")
+
 
 
 
