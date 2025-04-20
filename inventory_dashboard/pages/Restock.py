@@ -281,55 +281,83 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
 
 
 
-def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete):
-    """Delete from restock_log, restock_history, and inventory_master_log using restock_id."""
+def update_inventory_deduct_supply(restock_id_to_delete, date_to_delete):
+    """Update the inventory by deducting supply before deletion."""
     try:
-        # First, check restock_history if the restock_id and date are not found in restock_log
-        restock_history_entry = supabase.table("restock_history")\
-            .select("item_id")\
+        # Step 1: Try to fetch the supply value from restock_log for deduction
+        restock_log_response = supabase.table("restock_log")\
+            .select("supply", "item_id")\
             .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute().data
-        
-        if not restock_history_entry:
-            st.error(f"❌ No entry found for restock_id {restock_id_to_delete} and date {date_to_delete} in restock_history.")
-            return
 
-        # Extract item_id from restock_history
-        item_id = restock_history_entry[0]['item_id']
+        item_id = None
+        restock_log_supply = 0
 
-        # Now delete from restock_history
+        # Check if record exists in restock_log
+        if restock_log_response:
+            # Get the supply value from the restock_log
+            restock_log_supply = restock_log_response[0]['supply']
+            item_id = restock_log_response[0]['item_id']
+
+            # Step 2: Fetch the corresponding inventory record to deduct the supply
+            inventory_response = supabase.table("inventory_master_log")\
+                .select("supply")\
+                .eq("item_id", item_id)\
+                .execute().data
+
+            if not inventory_response:
+                st.warning(f"No inventory record found for Item ID {item_id}.")
+                return
+
+            # Get the current inventory quantity
+            current_inventory_quantity = inventory_response[0]['supply']
+
+            # Step 3: Deduct the supply from the inventory quantity
+            new_inventory_quantity = current_inventory_quantity - restock_log_supply
+
+            # Step 4: Update the inventory table with the new quantity
+            inventory_update_response = supabase.table("inventory_master_log")\
+                .update({"supply": new_inventory_quantity})\
+                .eq("item_id", item_id)\
+                .execute()
+
+            if inventory_update_response.get('status') == 200:
+                st.success(f"✅ Successfully deducted {restock_log_supply} from the inventory for Item ID {item_id}.")
+            else:
+                st.error(f"❌ Failed to update inventory for Item ID {item_id}.")
+                return
+
+        else:
+            # If no record is found in restock_log, continue to the next steps without updating inventory
+            st.info(f"No supply record found in restock_log for Restock ID {restock_id_to_delete}. Proceeding with deletion.")
+
+        # Step 5: Delete the rows from restock_history
         restock_history_deletion_response = supabase.table("restock_history")\
             .delete()\
             .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute()
 
-        # Debugging: Print the actual response for deletion in restock_history
-        st.write("Restock History Deletion Response:", restock_history_deletion_response)
-
-        # Check if the deletion was successful
-        if 'status' in restock_history_deletion_response and restock_history_deletion_response['status'] == 200:
-            st.success(f"✅ Successfully deleted record from restock_history for Item ID {item_id} on {date_to_delete}")
+        if restock_history_deletion_response.get('status') == 200:
+            st.success(f"✅ Successfully deleted record from restock_history for Restock ID {restock_id_to_delete}.")
         else:
-            st.error(f"❌ Failed to delete record from restock_history for Item ID {item_id} on {date_to_delete}")
+            st.error(f"❌ Failed to delete record from restock_history for Restock ID {restock_id_to_delete}.")
             return
 
-        # Step 2: Delete from inventory_master_log
-        deletion_response = supabase.table("inventory_master_log")\
-            .delete()\
-            .eq("item_id", item_id)\
-            .eq("log_date", date_to_delete)\
-            .execute()
+        # If restock_log record exists, delete from restock_log as well
+        if restock_log_response:
+            restock_log_deletion_response = supabase.table("restock_log")\
+                .delete()\
+                .eq("restock_id", restock_id_to_delete)\
+                .eq("restock_date", date_to_delete)\
+                .execute()
 
-        # Debugging: Print the actual response for deletion in inventory_master_log
-        st.write("Inventory Master Log Deletion Response:", deletion_response)
-
-        # Check if the deletion was successful
-        if 'status' in deletion_response and deletion_response['status'] == 200:
-            st.success(f"✅ Successfully deleted inventory record for Item ID {item_id} on {date_to_delete}")
-        else:
-            st.error(f"❌ Failed to delete inventory record for Item ID {item_id} on {date_to_delete}")
+            if restock_log_deletion_response.get('status') == 200:
+                st.success(f"✅ Successfully deleted record from restock_log for Restock ID {restock_id_to_delete}.")
+            else:
+                st.error(f"❌ Failed to delete record from restock_log for Restock ID {restock_id_to_delete}.")
+                return
 
     except Exception as e:
         st.error(f"❌ Error during deletion: {e}")
