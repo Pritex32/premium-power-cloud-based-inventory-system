@@ -10,6 +10,7 @@ import time
 from collections import defaultdict
 import io
 import plotly.express as px
+import openpyxl
 
 cookies = EncryptedCookieManager(prefix="inventory_app_", password="2018")
 
