@@ -141,7 +141,10 @@ def requisition_data():
 
 requisition_df= pd.DataFrame(requisition_data())
 # === Fetch tables ===
-
+# fetch employee name
+employee_dict = get_employee_dict()
+employee_name = st.selectbox("Employee", list(employee_dict.keys()))
+employee_id = employee_dict[employee_name]
 
 # === Define today's date ===
 today = date.today()
@@ -192,6 +195,8 @@ if selected == 'Add':
             st.warning("⚠️ Please fill in Location Used, Requisited By, and Issued By.")
         else:
             data = {
+                "employee_id": employee_id,
+                "employee_name": employee_name,
                 "item_id": item_dict[item_name],
                 "item_name": item_name,
                 "details": details.strip(),
