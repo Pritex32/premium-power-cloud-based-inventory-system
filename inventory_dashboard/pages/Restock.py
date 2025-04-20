@@ -324,9 +324,7 @@ def display_delete_interface():
 
 
 
-# Display the interface
-if selected == 'Delete':
-    display_delete_interface()
+
 
 def get_item_aggregation(item, start_date, end_date, aggregation, field):
     try:
