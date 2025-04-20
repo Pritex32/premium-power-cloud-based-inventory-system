@@ -9,7 +9,7 @@ import json
 import time
 from collections import defaultdict
 import plotly.express as px
-import traceback
+
 
 cookies = EncryptedCookieManager(prefix="inventory_app_", password="2023")
 
