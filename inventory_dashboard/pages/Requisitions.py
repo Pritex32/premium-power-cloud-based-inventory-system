@@ -276,82 +276,136 @@ def preview_inventory_record(item_id_to_delete, date_to_delete):
         st.error(f"❌ An error occurred while fetching the inventory record: {e}")
         return None
 
+ # Delete section
 
-# Delete section
-def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete):
-    """Delete the related requisition history, restock log, restock history, and inventory record by restock_id."""
-    try:
-        # First, delete the restock log record for the given restock_id and date
-        response_restock_log = supabase.table("restock_log")\
-            .delete()\
-            .eq("restock_id", restock_id_to_delete)\
-            .eq("restock_date", date_to_delete)\
-            .execute()
-
-        if response_restock_log.data is None:  # No record found in restock_log, proceed to restock_history
-            # If nothing is deleted in restock_log, delete the corresponding record from restock_history
-            response_restock_history = supabase.table("restock_history")\
-                .delete()\
-                .eq("restock_id", restock_id_to_delete)\
-                .eq("restock_date", date_to_delete)\
-                .execute()
-
-            if response_restock_history.data is None:  # Check if we couldn't delete anything from restock_history
-                st.error(f"❌ No record found for restock_id {restock_id_to_delete} on {date_to_delete}")
-                return
-
-        # After deleting from restock_log and/or restock_history, delete the corresponding record from inventory_master_log
-        response_inventory = supabase.table("inventory_master_log")\
-            .delete()\
-            .eq("restock_id", restock_id_to_delete)\
-            .eq("log_date", date_to_delete)\
-            .execute()
-
-        if response_inventory.data:
-            st.success(f"✅ Successfully deleted restock log, restock history, and inventory log for Restock ID: {restock_id_to_delete} on {date_to_delete}")
-        else:
-            st.error(f"❌ Failed to delete inventory log for Restock ID: {restock_id_to_delete} on {date_to_delete}")
-
-    except Exception as e:
-        st.error(f"❌ An error occurred while deleting records: {e}")
-
-# Streamlit Interface
-def display_delete_interface():
-    st.title("Delete Restock Log and Requisition History")
-
-    # Inputs for restock_id and date
-    restock_id_to_delete = st.number_input("Enter Restock ID to Delete:", min_value=1, step=1)
-    date_to_delete = st.date_input("Select the Date to Delete Restock Log:", value=pd.to_datetime("today"))
-
-    # Preview the record before deletion
-    if st.button("Preview Record"):
-        if restock_id_to_delete and date_to_delete:
-            inventory_record = preview_inventory_record(restock_id_to_delete, date_to_delete)
-        else:
-            st.warning("Please enter a valid Restock ID and Date.")
-
-    # Delete the record if the button is pressed
-    if st.button("Delete Record"):
-        if restock_id_to_delete and date_to_delete:
-            delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete)
-        else:
-            st.warning("Please enter a valid Restock ID and Date.")
-
-    # Delete record after preview
-    if st.button("Confirm Deletion"):
-        if item_id_to_delete and date_to_delete:
-            inventory_record = preview_inventory_record(item_id_to_delete, date_to_delete)
-            if inventory_record:
-                confirm = st.radio("Are you sure you want to delete this record?", ("Yes", "No"))
-                if confirm == "Yes":
-                    delete_inventory_and_related_records(item_id_to_delete, date_to_delete)
-        else:
-            st.warning("Please enter a valid Item ID and Date.")
-
-# Display the interface
 if selected == 'Delete':
-    display_delete_interface()
+    st.header("🗑️ Delete Requisition Record by ID")
 
+    # 1. Input the Requisition ID and Date to delete
+    requisition_id_to_delete = st.text_input("Enter Requisition ID to Delete", "")
+    requisition_date_to_delete = st.date_input("Enter Requisition Date to Delete")
+
+    if requisition_id_to_delete and requisition_date_to_delete:
+        # 2. Fetch requisition records from both tables
+        requisition_history_data = supabase.table("requisition_history")\
+            .select("*")\
+            .eq("requisition_id", requisition_id_to_delete)\
+            .eq("requisition_date", requisition_date_to_delete)\
+            .execute().data
+
+        requisition_log_data = supabase.table("requisition")\
+            .select("*")\
+            .eq("requisition_id", requisition_id_to_delete)\
+            .eq("requisition_date", requisition_date_to_delete)\
+            .execute().data
+
+        # 3. Choose record to show
+        if requisition_history_data:
+            selected_requisition = requisition_history_data[0]
+        elif requisition_log_data:
+            selected_requisition = requisition_log_data[0]
+        else:
+            selected_requisition = None
+
+        # 4. If found, show details and confirm deletion
+        if selected_requisition:
+            st.subheader("Requisition Details to Delete")
+            st.write(f"**Requisition ID:** {selected_requisition['requisition_id']}")
+            st.write(f"**Item ID:** {selected_requisition['item_id']}")
+            st.write(f"**Stock Out:** {selected_requisition['stock_out']}")
+            st.write(f"**Requisition Date:** {selected_requisition['requisition_date']}")
+
+            if st.button("🗑️ Delete This Requisition"):
+                try:
+                    # 5. Delete from requisition_history
+                    if requisition_history_data:
+                        supabase.table("requisition_history").delete()\
+                            .eq("requisition_id", selected_requisition["requisition_id"])\
+                            .eq("requisition_date", selected_requisition["requisition_date"])\
+                            .execute()
+
+                    # 6. Delete from requisition_log
+                    if requisition_log_data:
+                        supabase.table("requisition").delete()\
+                            .eq("requisition_id", selected_requisition["requisition_id"])\
+                            .eq("requisition_date", selected_requisition["requisition_date"])\
+                            .execute()
+
+                    # 7. Update inventory: deduct the stock out
+                    item_id = selected_requisition.get("item_id")
+                    stock_out = selected_requisition.get("stock_out")
+
+                    if item_id and stock_out:
+                        inventory_item = supabase.table("inventory_master_log")\
+                            .select("stock_out")\
+                            .eq("item_id", item_id)\
+                            .single().execute().data
+
+                        if inventory_item:
+                            new_stock_out = inventory_item["stock_out"] - stock_out
+                            supabase.table("inventory_master_log").update({"stock_out": new_stock_out})\
+                                .eq("item_id", item_id).execute()
+
+                    st.success("✅ Requisition record deleted and inventory updated successfully.")
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"❌ Failed to delete: {e}")
+        else:
+            st.error("❌ No requisition record found with the given ID and Date.")
+    else:
+        st.info("ℹ️ Please enter a Requisition ID and Requisition Date to delete.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
 
     # Function to calculate aggregation metrics for requisition history within a date range
 def get_item_aggregation(item, start_date, end_date, aggregation, field):
