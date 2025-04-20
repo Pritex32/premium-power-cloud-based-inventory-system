@@ -150,7 +150,7 @@ def move_requisitions_to_history(selected_date):
     
     if requisitions_today:
         # Get the schema of the requisition_history table
-        table_schema = supabase.table("requisition_history").select("*").limit(1).execute().data
+        table_schema = supabase.table("requisition").select("*").limit(1).execute().data
         if not table_schema:
             st.error("❌ Failed to retrieve requisition history table schema!")
             return
