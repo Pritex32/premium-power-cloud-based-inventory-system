@@ -563,12 +563,19 @@ if selected == "Filter":
 
 
 # Load data
-restock_history_data = restock_history_data()
+# Function to fetch restock history data
+def restock_history_data():
+    supabase = get_supabase_client()  # Make sure this is defined
+    response = supabase.table("restock_history").select("*").execute()
+    return response.data
 
-# Check if the data is valid
-if restock_history_data and isinstance(restock_history_data, list):
-    restock_history_df = pd.DataFrame(restock_history_data)
-    st.write(restock_history_df)  # Display the DataFrame
+# Now when you use the variable, make sure it’s not overwriting the function name
+restock_data = restock_history_data()  # Call the function and store its result in a different variable
+
+# Check if the data is valid before creating the DataFrame
+if restock_data and isinstance(restock_data, list):
+    restock_history_df = pd.DataFrame(restock_data)
+    st.write(restock_history_df)
 else:
     st.error("❌ Invalid or empty data returned from the database.")
 
