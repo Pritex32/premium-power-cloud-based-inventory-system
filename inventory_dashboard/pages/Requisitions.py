@@ -206,8 +206,7 @@ if selected == 'Add':
                 "requisited_by": requisited_by.strip(),
                 "issued_by": issued_by.strip(),
                 "remark": remark.strip(),
-                "requisition_date": requisition_date.strftime("%Y-%m-%d")
-            }
+                "requisition_date": requisition_date.strftime("%Y-%m-%d") }
 
             st.write("📦 Submitting data:", data)  # Debugging
 
