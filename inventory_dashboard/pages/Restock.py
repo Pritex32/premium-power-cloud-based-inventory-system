@@ -305,8 +305,11 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
             .eq("restock_date", date_to_delete)\
             .execute()
 
-        # Check deletion status for restock_history
-        if restock_history_deletion_response.get('status') == 200:
+        # Debugging: Print the actual response for deletion in restock_history
+        st.write("Restock History Deletion Response:", restock_history_deletion_response)
+
+        # Check if the deletion was successful
+        if 'status' in restock_history_deletion_response and restock_history_deletion_response['status'] == 200:
             st.success(f"✅ Successfully deleted record from restock_history for Item ID {item_id} on {date_to_delete}")
         else:
             st.error(f"❌ Failed to delete record from restock_history for Item ID {item_id} on {date_to_delete}")
@@ -319,8 +322,11 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
             .eq("log_date", date_to_delete)\
             .execute()
 
-        # Check deletion status for inventory_master_log
-        if deletion_response.get('status') == 200:
+        # Debugging: Print the actual response for deletion in inventory_master_log
+        st.write("Inventory Master Log Deletion Response:", deletion_response)
+
+        # Check if the deletion was successful
+        if 'status' in deletion_response and deletion_response['status'] == 200:
             st.success(f"✅ Successfully deleted inventory record for Item ID {item_id} on {date_to_delete}")
         else:
             st.error(f"❌ Failed to delete inventory record for Item ID {item_id} on {date_to_delete}")
@@ -328,6 +334,7 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
     except Exception as e:
         st.error(f"❌ Error during deletion: {e}")
         st.text(traceback.format_exc())
+
 
 
 def display_delete_interface():
