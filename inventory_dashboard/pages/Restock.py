@@ -280,64 +280,57 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
         return None
 
 
+import traceback
+
 def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete):
-    """Delete records and update inventory by reversing the restocked quantity."""
+    """Delete from restock_log, restock_history, and inventory_master_log using restock_id."""
     try:
-        # Fetch restock info
-        restock_record = supabase.table("restock_history")\
-            .select("item_id", "supply")\
+        # Fetch the item_id based on restock_id
+        restock_entry = supabase.table("restock_log")\
+            .select("item_id")\
             .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute().data
-
-        if not restock_record:
-            st.warning("No matching restock record found.")
+        
+        if not restock_entry:
+            st.error(f"❌ No entry found for restock_id {restock_id_to_delete} and date {date_to_delete} in restock_log.")
             return
 
-        item_id = restock_record[0]['item_id']
-        restocked_quantity = restock_record[0]['supply']
+        item_id = restock_entry[0]['item_id']
 
-        # ✅ Reverse the inventory by subtracting restocked quantity
-        inventory_data = supabase.table("inventory_master_log")\
-            .select("supply")\
+        # Step 1: Delete the corresponding records from restock_history first
+        restock_history_deletion_response = supabase.table("restock_history")\
+            .delete()\
             .eq("item_id", item_id)\
-            .execute().data
-
-        if inventory_data:
-            current_quantity = inventory_data[0]['supply']
-            updated_quantity = max(0, current_quantity - restocked_quantity)
-
-            supabase.table("inventory_master_log")\
-                .update({"supply": updated_quantity})\
-                .eq("item_id", item_id)\
-                .execute()
-
-        # ✅ Delete from restock_log
-        supabase.table("restock_log")\
-            .delete()\
-            .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute()
 
-        # ✅ Delete from restock_history
-        supabase.table("restock_history")\
-            .delete()\
-            .eq("restock_id", restock_id_to_delete)\
-            .eq("restock_date", date_to_delete)\
-            .execute()
+        # Debugging: Check if deletion was successful in restock_history
+        st.write("Deletion response from restock_history:", restock_history_deletion_response)
 
-        # ✅ Delete from inventory_master_log
-        supabase.table("inventory_master_log")\
+        if restock_history_deletion_response.get('status') != 200:
+            st.error(f"❌ Failed to delete restock history for Item ID {item_id} on {date_to_delete}")
+            return
+
+        # Step 2: Now delete from inventory_master_log
+        deletion_response = supabase.table("inventory_master_log")\
             .delete()\
             .eq("item_id", item_id)\
             .eq("log_date", date_to_delete)\
             .execute()
 
-        st.success(f"✅ Deleted and reversed inventory changes for Restock ID {restock_id_to_delete} on {date_to_delete}.")
+        # Debugging: Check if deletion was successful in inventory_master_log
+        st.write("Deletions response from inventory_master_log:", deletion_response)
 
+        if deletion_response.get('status') == 200:
+            st.success(f"✅ Successfully deleted inventory record for Item ID {item_id} on {date_to_delete}")
+        else:
+            st.error(f"❌ Failed to delete inventory record for Item ID {item_id} on {date_to_delete}")
+    
     except Exception as e:
         st.error(f"❌ Error during deletion: {e}")
         st.text(traceback.format_exc())
+
 
 def display_delete_interface():
     st.subheader("🗑️ Delete Restock Entry")
