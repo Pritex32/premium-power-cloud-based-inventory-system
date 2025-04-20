@@ -299,7 +299,7 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
 
         # ✅ Reverse the inventory by subtracting restocked quantity
         inventory_data = supabase.table("inventory_master_log")\
-            .select("quantity")\
+            .select("supply")\
             .eq("item_id", item_id)\
             .execute().data
 
