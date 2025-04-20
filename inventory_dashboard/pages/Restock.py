@@ -308,6 +308,19 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
 
     except Exception as e:
         st.error(f"❌ An error occurred while deleting records: {e}")
+def display_delete_interface():
+    st.subheader("🗑️ Delete Restock Entry")
+
+    restock_id_to_delete = st.text_input("Enter Restock ID to delete:")
+    date_to_delete = st.date_input("Enter Restock Date:")
+
+    if restock_id_to_delete and date_to_delete:
+        if st.button("Preview Record"):
+            preview_restock_history_record(restock_id_to_delete, date_to_delete)
+
+        if st.button("Confirm Delete"):
+            delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete)
+
 if selected == 'Delete':
     display_delete_interface()
 
