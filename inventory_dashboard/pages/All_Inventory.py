@@ -260,6 +260,24 @@ def update_inventory_balances(selected_date):
             closing_balance = open_balance + supply + return_quantity - stock_out
             closing_balance = int(closing_balance)
 
+            existing_log = next(
+          (entry for entry in inventory_response 
+           if entry["item_id"] == item_id and entry["log_date"] == selected_date.isoformat()),
+            None)
+
+             # Merge with existing values if any
+             if existing_log:
+                 supply += int(existing_log.get("supply", 0))
+                 stock_out += int(existing_log.get("stock_out", 0))
+                 return_quantity += int(existing_log.get("return_quantity", 0))
+            open_balance = int(existing_log.get("open_balance", open_balance))  # preserve original open balance
+
+            closing_balance = open_balance + supply + return_quantity - stock_out
+            closing_balance = int(closing_balance)
+
+
+            
+
             daily_log = {
                 "item_id": item_id,
                 "item_name": item_name,
