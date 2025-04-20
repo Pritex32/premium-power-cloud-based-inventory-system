@@ -337,7 +337,7 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
         .execute().data
 
     if restock_log_response:
-        restock_log_deletion_response = supabase.table("restock_log")\
+        restock_log_deletion_response = supabase.table("restock_history")\
             .delete()\
             .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
@@ -354,47 +354,6 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
 
   
 
-
-def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete):
-    # Update inventory by deducting supply before deletion
-    update_inventory_deduct_supply(restock_id_to_delete, date_to_delete)
-
-    # Step 1: Delete the rows from restock_history
-    restock_history_deletion_response = supabase.table("restock_history")\
-        .delete()\
-        .eq("restock_id", restock_id_to_delete)\
-        .eq("restock_date", date_to_delete)\
-        .execute()
-
-    # Check if there are any errors in the response
-    if restock_history_deletion_response.errors:
-        st.error(f"❌ Failed to delete record from restock_history for Restock ID {restock_id_to_delete}. Errors: {restock_history_deletion_response.errors}")
-        return
-    else:
-        st.success(f"✅ Successfully deleted record from restock_history for Restock ID {restock_id_to_delete}.")
-
-    # Step 2: If restock_log exists, delete from restock_log
-    restock_log_response = supabase.table("restock_log")\
-        .select("restock_id")\
-        .eq("restock_id", restock_id_to_delete)\
-        .eq("restock_date", date_to_delete)\
-        .execute().data
-
-    if restock_log_response:
-        restock_log_deletion_response = supabase.table("restock_log")\
-            .delete()\
-            .eq("restock_id", restock_id_to_delete)\
-            .eq("restock_date", date_to_delete)\
-            .execute()
-
-        # Check if there are any errors in the restock_log deletion response
-        if restock_log_deletion_response.errors:
-            st.error(f"❌ Failed to delete record from restock_log for Restock ID {restock_id_to_delete}. Errors: {restock_log_deletion_response.errors}")
-            return
-        else:
-            st.success(f"✅ Successfully deleted record from restock_log for Restock ID {restock_id_to_delete}.")
-    else:
-        st.info(f"No record found in restock_log for Restock ID {restock_id_to_delete}. Proceeding with deletion from restock_history.")
 
 
 def display_delete_interface():
