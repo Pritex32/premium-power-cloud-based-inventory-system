@@ -563,7 +563,15 @@ if selected == "Filter":
 
 
 # Load data
-restock_history_df = pd.DataFrame(restock_history_data)
+restock_history_data = restock_history_data()
+
+# Check if the data is valid
+if restock_history_data and isinstance(restock_history_data, list):
+    restock_history_df = pd.DataFrame(restock_history_data)
+    st.write(restock_history_df)  # Display the DataFrame
+else:
+    st.error("❌ Invalid or empty data returned from the database.")
+
 
 if selected == "Reports":
 
