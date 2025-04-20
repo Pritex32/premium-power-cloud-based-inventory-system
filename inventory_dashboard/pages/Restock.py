@@ -382,7 +382,6 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
         else:
             st.info(f"No record found in restock_log for Restock ID {restock_id_to_delete}. Proceeding with deletion from restock_history.")
             
-            
 def display_delete_interface():
     st.subheader("🗑️ Delete Restock Entry")
 
@@ -398,6 +397,7 @@ def display_delete_interface():
 
 if selected == 'Delete':
     display_delete_interface()
+
 
 
 
