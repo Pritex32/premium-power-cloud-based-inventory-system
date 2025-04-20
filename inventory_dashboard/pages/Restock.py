@@ -258,49 +258,54 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
 
 def update_inventory_deduct_supply(restock_id_to_delete, date_to_delete):
     """Update the inventory by deducting supply before deletion."""
-            # Step 1: Try to fetch the supply value from restock_log for deduction
+    # Step 1: Try to fetch the supply value from restock_log for deduction
     restock_log_response = supabase.table("restock_log")\
-            .select("supply", "item_id")\
-            .eq("restock_id", restock_id_to_delete)\
-            .eq("restock_date", date_to_delete)\
-            .execute().data
+        .select("supply", "item_id")\
+        .eq("restock_id", restock_id_to_delete)\
+        .eq("restock_date", date_to_delete)\
+        .execute().data
 
     item_id = None
     restock_log_supply = 0
 
-        # Check if record exists in restock_log
+    # Check if record exists in restock_log
     if restock_log_response:
+        # Get the supply value from the restock_log
         restock_log_supply = restock_log_response[0]['supply']
         item_id = restock_log_response[0]['item_id']
 
-            # Step 2: Fetch the corresponding inventory record to deduct the supply
+        # Step 2: Fetch the corresponding inventory record to deduct the supply
         inventory_response = supabase.table("inventory_master_log")\
-                .select("supply")\
-                .eq("item_id", item_id)\
-                .execute().data
+            .select("supply")\
+            .eq("item_id", item_id)\
+            .execute().data
 
         if not inventory_response:
             st.warning(f"No inventory record found for Item ID {item_id}.")
             return
 
-            # Get the current inventory quantity
-    current_inventory_quantity = inventory_response[0]['supply']
+        # Get the current inventory quantity if the inventory response is not empty
+        current_inventory_quantity = inventory_response[0]['supply']
 
-            # Step 3: Deduct the supply from the inventory quantity
-    new_inventory_quantity = current_inventory_quantity - restock_log_supply
+        # Step 3: Deduct the supply from the inventory quantity
+        new_inventory_quantity = current_inventory_quantity - restock_log_supply
 
-            # Step 4: Update the inventory table with the new quantity
-    inventory_update_response = supabase.table("inventory_master_log")\
-                .update({"supply": new_inventory_quantity})\
-                .eq("item_id", item_id)\
-                .execute()
+        # Step 4: Update the inventory table with the new quantity
+        inventory_update_response = supabase.table("inventory_master_log")\
+            .update({"supply": new_inventory_quantity})\
+            .eq("item_id", item_id)\
+            .execute()
 
-            # Check if the update was successful based on the status code
-    if inventory_update_response.status_code == 200:  # Success
-        st.success(f"✅ Successfully deducted {restock_log_supply} from the inventory for Item ID {item_id}.")
+        # Check if the update was successful based on the status code
+        if inventory_update_response.status_code == 200:  # Success
+            st.success(f"✅ Successfully deducted {restock_log_supply} from the inventory for Item ID {item_id}.")
+        else:
+            st.error(f"❌ Failed to update inventory for Item ID {item_id}. Status Code: {inventory_update_response.status_code}")
+            return
+
     else:
-        st.error(f"❌ Failed to update inventory for Item ID {item_id}. Status Code: {inventory_update_response.status_code}")
-        return
+        # If no record is found in restock_log, continue to the next steps without updating inventory
+        st.info(f"No supply record found in restock_log for Restock ID {restock_id_to_delete}. Proceeding with deletion.")
 
     
   
