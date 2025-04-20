@@ -320,6 +320,8 @@ def display_delete_interface():
                     delete_inventory_and_related_records(item_id_to_delete, date_to_delete)
         else:
             st.warning("Please enter a valid Item ID and Date.")
+if selected == 'Delete':
+    display_delete_interface()
 
 
 
