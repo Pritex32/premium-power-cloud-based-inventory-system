@@ -308,30 +308,25 @@ def update_inventory_deduct_supply(restock_id_to_delete, date_to_delete):
             # If no record is found in restock_log, continue to the next steps without updating inventory
             st.info(f"No supply record found in restock_log for Restock ID {restock_id_to_delete}. Proceeding with deletion.")
 
-    except Exception as e:
-        st.error(f"❌ Error during inventory update: {e}")
-        st.text(traceback.format_exc())
+  
 
 
 def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_to_delete):
-    """Delete from restock_log, restock_history, and inventory_master_log using restock_id."""
-    try:
-        # First, update the inventory (deduct supply)
-        update_inventory_deduct_supply(restock_id_to_delete, date_to_delete)
+    update_inventory_deduct_supply(restock_id_to_delete, date_to_delete)
 
         # Step 1: Delete the rows from restock_history
-        restock_history_deletion_response = supabase.table("restock_history")\
+    restock_history_deletion_response = supabase.table("restock_history")\
             .delete()\
             .eq("restock_id", restock_id_to_delete)\
             .eq("restock_date", date_to_delete)\
             .execute()
 
         # Check if there are any errors in the response
-        if restock_history_deletion_response.errors:
+    if restock_history_deletion_response.errors:
             st.error(f"❌ Failed to delete record from restock_history for Restock ID {restock_id_to_delete}. Errors: {restock_history_deletion_response.errors}")
             return
-        else:
-            st.success(f"✅ Successfully deleted record from restock_history for Restock ID {restock_id_to_delete}.")
+    else:
+        st.success(f"✅ Successfully deleted record from restock_history for Restock ID {restock_id_to_delete}.")
 
         # Step 2: If restock_log exists, delete from restock_log
         restock_log_response = supabase.table("restock_log")\
@@ -370,6 +365,9 @@ def display_delete_interface():
 
 if selected == 'Delete':
     display_delete_interface()
+
+
+
 
 
 
