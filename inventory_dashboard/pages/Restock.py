@@ -337,6 +337,7 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
 
     except Exception as e:
         st.error(f"❌ Error during deletion: {e}")
+        st.text(traceback.format_exc())
 
 def display_delete_interface():
     st.subheader("🗑️ Delete Restock Entry")
