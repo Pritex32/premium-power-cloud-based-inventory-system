@@ -252,6 +252,8 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
         return None
 
 
+import traceback
+
 def preview_restock_history_record(restock_id_to_delete, date_to_delete):
     """Preview the restock history record for the given restock_id and date."""
     try:
@@ -279,11 +281,6 @@ def preview_restock_history_record(restock_id_to_delete, date_to_delete):
         st.error(f"❌ Error while fetching record: {e}")
         return None
 
-
-
-
-
-import traceback
 
 def update_inventory_deduct_supply(restock_id_to_delete, date_to_delete):
     """Update the inventory by deducting supply before deletion."""
@@ -326,10 +323,11 @@ def update_inventory_deduct_supply(restock_id_to_delete, date_to_delete):
                 .eq("item_id", item_id)\
                 .execute()
 
-            if not inventory_update_response.errors:  # Check for errors
+            # Check if the update was successful based on the status code
+            if inventory_update_response.status_code == 200:  # Success
                 st.success(f"✅ Successfully deducted {restock_log_supply} from the inventory for Item ID {item_id}.")
             else:
-                st.error(f"❌ Failed to update inventory for Item ID {item_id}. Errors: {inventory_update_response.errors}")
+                st.error(f"❌ Failed to update inventory for Item ID {item_id}. Status Code: {inventory_update_response.status_code}")
                 return
 
         else:
@@ -354,11 +352,11 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
             .eq("restock_date", date_to_delete)\
             .execute()
 
-        # Check for errors in the response
-        if not restock_history_deletion_response.errors:
+        # Check for success or failure based on the status code
+        if restock_history_deletion_response.status_code == 200:
             st.success(f"✅ Successfully deleted record from restock_history for Restock ID {restock_id_to_delete}.")
         else:
-            st.error(f"❌ Failed to delete record from restock_history for Restock ID {restock_id_to_delete}. Errors: {restock_history_deletion_response.errors}")
+            st.error(f"❌ Failed to delete record from restock_history for Restock ID {restock_id_to_delete}. Status Code: {restock_history_deletion_response.status_code}")
             return
 
         # Step 2: If restock_log exists, delete from restock_log
@@ -375,11 +373,11 @@ def delete_inventory_and_related_records_by_restock(restock_id_to_delete, date_t
                 .eq("restock_date", date_to_delete)\
                 .execute()
 
-            # Check for errors in the response
-            if not restock_log_deletion_response.errors:
+            # Check for success or failure based on the status code
+            if restock_log_deletion_response.status_code == 200:
                 st.success(f"✅ Successfully deleted record from restock_log for Restock ID {restock_id_to_delete}.")
             else:
-                st.error(f"❌ Failed to delete record from restock_log for Restock ID {restock_id_to_delete}. Errors: {restock_log_deletion_response.errors}")
+                st.error(f"❌ Failed to delete record from restock_log for Restock ID {restock_id_to_delete}. Status Code: {restock_log_deletion_response.status_code}")
                 return
 
         # If no record is found in restock_log, proceed to deletion of restock_history and update inventory
@@ -406,7 +404,6 @@ def display_delete_interface():
 
 if selected == 'Delete':
     display_delete_interface()
-
 
 
 
