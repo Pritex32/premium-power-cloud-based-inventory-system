@@ -332,7 +332,7 @@ if selected == 'Delete':
 
                     # Success message after deletion from both tables and inventory update
                     st.success("✅ Restock record deleted and inventory updated successfully.")
-                    st.rerun()
+                    
 
                 except Exception as e:
                     st.error(f"❌ Failed to delete: {e}")
