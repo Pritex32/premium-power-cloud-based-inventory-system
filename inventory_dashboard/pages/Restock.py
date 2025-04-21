@@ -575,7 +575,7 @@ restock_data = restock_history_data()  # Call the function and store its result 
 # Check if the data is valid before creating the DataFrame
 if restock_data and isinstance(restock_data, list):
     restock_history_df = pd.DataFrame(restock_data)
-    st.write(restock_history_df)
+    
 else:
     st.error("❌ Invalid or empty data returned from the database.")
 
