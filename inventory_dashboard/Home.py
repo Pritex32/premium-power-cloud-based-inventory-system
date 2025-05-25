@@ -1,6 +1,6 @@
 import streamlit as st
 st.set_page_config(
-    page_title='INVENTORY MANAGEMENT SYSTEM',
+    page_title='',
     page_icon='👋 ',
 
 )
@@ -43,14 +43,18 @@ supabase = get_supabase_client() # use this to call the supabase database
 
 
 # Load the image
-image_path = "inventory_dashboard/pages/Daily_Requisitions and 8 more pages - Profile 1 - Microsoft​ Edge 3_23_2025 1_29_17 PM (2).png"
-image = Image.open(image_path)
+col1,col2=st.columns(2)
+with col1:
+    st.subheader('INVENTORY MANAGEMENT SYSTEM')
+with col2:
+    image_path = "inventory_dashboard/pages/Daily_Requisitions and 8 more pages - Profile 1 - Microsoft​ Edge 3_23_2025 1_29_17 PM (2).png"
+    image = Image.open(image_path)
 
 # Resize the image (set new width & height)
-resized_image = image.resize((200,100) ) # Adjust size as needed
+    resized_image = image.resize((200,100) ) # Adjust size as needed
 
 # Display in Streamlit
-st.image(resized_image)
+    st.image(resized_image)
 
 
 # contact developer
