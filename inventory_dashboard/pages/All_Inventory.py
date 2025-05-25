@@ -269,7 +269,9 @@ def update_inventory_balances(selected_date):
                 supply += int(existing_log.get("supply", 0))
                 stock_out += int(existing_log.get("stock_out", 0))
                 return_quantity += int(existing_log.get("return_quantity", 0))
-            open_balance = int(existing_log.get("open_balance", open_balance))  # preserve original open balance
+                open_balance = int(existing_log.get("open_balance", open_balance))
+            else:
+                open_balance = int(prev_closing or 0)# preserve original open balance
 
             
 
