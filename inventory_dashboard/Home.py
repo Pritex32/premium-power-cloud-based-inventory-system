@@ -1,6 +1,6 @@
 import streamlit as st
 st.set_page_config(
-    page_title='',
+    page_title='Inventory',
     page_icon='👋 ',
 
 )
