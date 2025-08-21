@@ -15,49 +15,7 @@ from email.mime.multipart import MIMEMultipart
 cookies = EncryptedCookieManager(prefix="inventory_app_", password="2020")
 
 
-def check_access(required_role=None):
-    """Ensures the user is logged in and has the correct role. Shows a loading spinner while fetching cookies."""
 
-    # Show a spinner while waiting for cookies to be ready
-    if not cookies.ready():
-        with st.spinner("🔄 Fetching session cookies... Please wait."):
-            time.sleep(2)  # Short delay to allow UI to update before rerunning
-        st.rerun()  # Restart script after waiting
-
-    # Restore session from cookies if missing
-    if "logged_in" not in st.session_state or not st.session_state.get("logged_in", False):
-        if cookies.get("logged_in") == "True":
-            st.session_state.logged_in = True
-            user_data = cookies.get("user")
-
-            if user_data and user_data != "{}":  # Ensure user data is not empty
-                try:
-                    st.session_state.user = json.loads(user_data)
-                    time.sleep(1)  # Small delay to prevent UI flickering
-                    st.rerun()  # Force rerun after restoring session
-                except json.JSONDecodeError:
-                    st.session_state.user = None
-                    st.error("⚠️ Corrupted user session. Please log in again.")
-                    st.stop()
-        else:
-            st.warning("⚠️ You must log in to access this page.")
-            st.stop()
-
-    # Ensure user session is valid
-    if "user" not in st.session_state or not isinstance(st.session_state.user, dict) or not st.session_state.user:
-        st.error("🚫 Invalid user session. Please log in again.")
-        st.stop()
-
-  )
-
-
-# Ensure session state is initialized to prevent errors
-if "user" not in st.session_state:
-    st.session_state.user = {}  # Initialize as an empty dictionary
-
-# 🔹 **Check Access for Inventory Role**
-check_access(required_role="Employee")
-check_access(required_role="Inventory")
 
 
 # Add your inventory-related features here
@@ -439,4 +397,5 @@ if st.session_state["verified_secret"]:
                 st.rerun()
             else:
                 st.error("Enter a valid Request ID.")
+
 
