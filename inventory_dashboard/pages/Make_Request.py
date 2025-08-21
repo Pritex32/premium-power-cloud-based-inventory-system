@@ -48,11 +48,7 @@ def check_access(required_role=None):
         st.error("🚫 Invalid user session. Please log in again.")
         st.stop()
 
-    # Check role access if required_role is specified
-    user_role = st.session_state.user.get("role", None)
-    if required_role and user_role != required_role:
-        st.error("🚫 Unauthorized Access! You don't have permission to view this page.")
-        st.stop()
+  )
 
 
 # Ensure session state is initialized to prevent errors
@@ -443,3 +439,4 @@ if st.session_state["verified_secret"]:
                 st.rerun()
             else:
                 st.error("Enter a valid Request ID.")
+
